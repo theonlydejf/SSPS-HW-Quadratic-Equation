@@ -12,6 +12,21 @@ namespace Equations
             
         }
 
+        public void Simplify()
+        {
+            Dictionary<string, VariableCollection> variables = new Dictionary<string, VariableCollection>();
+            foreach (Variable variable in this)
+            {
+                if (variable.Multiplier == 0)
+                    continue;
+
+                if(!variables.ContainsKey(variable.Identifier))
+                {
+
+                }
+            }
+        }
+
         public static explicit operator Variable(VariableCollection collection)
         {
             if (collection.Count != 1)
@@ -61,8 +76,7 @@ namespace Equations
                 else if (sb.Length > 0 && variable.Multiplier < 0)
                     sb.Append(" - ");
 
-                sb.Append(sb.Length > 0 ? Math.Abs(variable.Multiplier) : variable.Multiplier);
-                sb.Append(variable.Identifier);
+                sb.Append(variable.ToString(sb.Length > 0));
             }
             return sb.ToString();
         }

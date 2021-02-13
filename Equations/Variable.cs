@@ -17,7 +17,15 @@ namespace Equations
         public char? Marker { get; }
         public int Exponent { get; }
         public double Multiplier { get; }
-        public string Identifier { get => Exponent != 1 ? Marker + "^" + Exponent : Marker.ToString(); }
+        public string Identifier 
+        {
+            get
+            {
+                if (Exponent != 1)
+                    return Marker + "^" + Exponent;
+                return Marker == null ? "null" : Marker.ToString();
+            }
+        }
 
         public Variable(char? marker, int exponent, double multiplier)
         {
@@ -85,11 +93,6 @@ namespace Equations
             return hashCode;
         }
 
-        public override string ToString()
-        {
-            return Multiplier + Identifier;
-        }
-
         public static VariableCollection operator +(Variable a, Variable b)
         {
             if(a.Identifier == b.Identifier)
@@ -137,6 +140,24 @@ namespace Equations
                 throw new ArgumentException("Inputed variable is not a raw number!");
 
             return variable.Multiplier;
+        }
+
+        public override string ToString() => ToString(false);
+
+        internal string ToString(bool withoutSigns)
+        {
+            double val = Multiplier;
+            if(withoutSigns)
+                val = Math.Abs(Multiplier);
+
+            if (Marker == null)
+                return Multiplier.ToString();
+            if (val == 1)
+                return Identifier;
+            if (val == -1)
+                return "-" + Identifier;
+
+            return val + Identifier;
         }
     }
 }
