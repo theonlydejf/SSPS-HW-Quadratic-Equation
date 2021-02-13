@@ -116,6 +116,8 @@ namespace Equations
         {
             if (b.Marker == null)
                 return new Variable(a.Marker, a.Exponent, a.Multiplier * b.Multiplier);
+            if (a.Marker == null)
+                return new Variable(b.Marker, b.Exponent, a.Multiplier * b.Multiplier);
 
             if (a.Marker != b.Marker)
                 throw new NotImplementedException("Multiplying two different variables is not yet implemented!");

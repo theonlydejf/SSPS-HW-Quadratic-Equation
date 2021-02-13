@@ -56,10 +56,64 @@ namespace Equations
             {
                 string varData = variablesStr[i];
 
+                if(varData.Contains("("))
+                {
+                    VariableCollection result = HandleBrackets(variablesStr, ref i);
+                    variables.AddRange(result);
+                    continue;
+                }
+
                 if (varData == string.Empty)
                     continue;
+
                 variables.Add(Variable.Parse(varData));
             }
+
+            return variables;
+        }
+
+        private static VariableCollection HandleBrackets(string[] variablesStr, ref int i)
+        {
+            int skipCount = 1;
+            int multiplier = 1;
+            Variable multiplyingVar = 1;
+            if(variablesStr[i][0] != '-' || variablesStr[i][1] != '(')
+            {
+                string[] data = variablesStr[i].Split('(');
+                skipCount = data[0].Length + 1;
+                multiplyingVar = Variable.Parse(data[0]);
+            }
+            else if(variablesStr[i][0] == '-')
+            {
+                multiplier = -1;
+                skipCount = 2;
+            }
+            VariableCollection variables = new VariableCollection();
+            variablesStr[i] = variablesStr[i].Substring(skipCount, variablesStr[i].Length - skipCount);
+            i--;
+
+            while(true)
+            {
+                i++;
+                string varData = variablesStr[i];
+
+                if (varData.Contains("("))
+                {
+                    VariableCollection result = HandleBrackets(variablesStr, ref i);
+                    variables.AddRange(result);
+                    continue;
+                }
+
+                if (varData == string.Empty)
+                    continue;
+
+                if (varData.Contains(")"))
+                    break;
+
+                variables.Add(Variable.Parse(varData) * multiplier * multiplyingVar);
+            }
+
+            variables.Add(Variable.Parse(variablesStr[i].Substring(0, variablesStr[i].Length - 1)) * multiplier * multiplyingVar);
 
             return variables;
         }
