@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SSPS-HW-Quadratic-Equation", "SSPS-HW-Quadratic-Equation\SSPS-HW-Quadratic-Equation.csproj", "{B3C50B37-429F-4273-87CF-B1CF08E63293}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3C50B37-429F-4273-87CF-B1CF08E63293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3C50B37-429F-4273-87CF-B1CF08E63293}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3C50B37-429F-4273-87CF-B1CF08E63293}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3C50B37-429F-4273-87CF-B1CF08E63293}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E41141E3-396D-45B0-A7EA-A02B73208B20}
+	EndGlobalSection
+EndGlobal
