@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Equations
 {
@@ -14,17 +15,53 @@ namespace Equations
 
         public void Simplify()
         {
-            Dictionary<string, VariableCollection> variables = new Dictionary<string, VariableCollection>();
+            Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
+            int simplifyCount = 0;
             foreach (Variable variable in this)
             {
                 if (variable.Multiplier == 0)
+                {
+                    simplifyCount++;
                     continue;
+                }
 
                 if(!variables.ContainsKey(variable.Identifier))
                 {
-
+                    variables.Add(variable.Identifier, variable);
+                    continue;
                 }
+
+                variables[variable.Identifier] = (Variable)(variables[variable.Identifier] + variable);
+                simplifyCount++;
             }
+
+            Clear();
+
+            foreach(Variable variable in variables.Values)
+            {
+                Add(variable);
+            }
+
+            if (simplifyCount > 0)
+                Simplify();
+        }
+
+        public static VariableCollection Parse(string s)
+        {
+            VariableCollection variables = new VariableCollection();
+            string parsable = Regex.Replace(s, @"\s", "").Replace("-", "+-");
+            string[] variablesStr = parsable.Split('+');
+
+            for (int i = 0; i < variablesStr.Length; i++)
+            {
+                string varData = variablesStr[i];
+
+                if (varData == string.Empty)
+                    continue;
+                variables.Add(Variable.Parse(varData));
+            }
+
+            return variables;
         }
 
         public static explicit operator Variable(VariableCollection collection)
@@ -37,6 +74,11 @@ namespace Equations
         public static implicit operator VariableCollection(Variable variable)
         {
             return new VariableCollection(variable);
+        }
+
+        public static implicit operator VariableCollection(double number)
+        {
+            return new Variable(null, 1, number);
         }
 
         public static VariableCollection operator +(VariableCollection a, Variable b)
@@ -61,6 +103,31 @@ namespace Equations
             vars.AddRange(a);
             vars.AddRange(b);
             return vars;
+        }
+
+        public static VariableCollection operator -(VariableCollection a)
+        {
+            VariableCollection variables = new VariableCollection();
+            foreach (Variable variable in a)
+            {
+                variables.Add(-variable);
+            }
+            return variables;
+        }
+
+        public static VariableCollection operator -(VariableCollection a, VariableCollection b)
+        {
+            return a + -b;
+        }
+
+        public static VariableCollection operator -(VariableCollection a, Variable b)
+        {
+            return a + -b;
+        }
+
+        public static VariableCollection operator -(Variable a, VariableCollection b)
+        {
+            return a + -b;
         }
 
         public override string ToString()

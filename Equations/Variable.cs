@@ -134,6 +134,11 @@ namespace Equations
             return new Variable(a.Marker, a.Exponent, a.Multiplier / b.Multiplier);
         }
 
+        public static implicit operator Variable(double number)
+        {
+            return new Variable(null, 1, number);
+        }
+
         public static explicit operator double(Variable variable)
         {
             if (variable.Marker.HasValue)
@@ -151,7 +156,7 @@ namespace Equations
                 val = Math.Abs(Multiplier);
 
             if (Marker == null)
-                return Multiplier.ToString();
+                return val.ToString();
             if (val == 1)
                 return Identifier;
             if (val == -1)
