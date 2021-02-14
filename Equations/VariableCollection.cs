@@ -64,90 +64,21 @@ namespace Equations
                     {
                         rawTerms.Add(sb.ToString());
                         sb.Clear();
-                        sb.Append(acChar);
                     }
                 }
                 else if(acChar == '(')
                 {
-                    List<string> partsOfCurrentTerm = new List<string>();
-                    bool trueEnd = false;
-                    while (!trueEnd)
-                    {
-                        partsOfCurrentTerm.Add(sb.ToString());
-                        sb.Clear();
-                        bool insideBracket = s[i] == '(';
-
-                        int bracketCount = 0;
-                        if (insideBracket)
-                            i++;
-                        while(true)
-                        {
-                            acChar = s[i];
-
-                            if(insideBracket)
-                            {
-                                if (acChar == '(')
-                                    bracketCount++;
-                                else if (acChar == ')')
-                                    bracketCount--;
-                                i++;
-                                if (bracketCount < 0)
-                                    break;
-                                sb.Append(acChar);
-                            }
-                            else
-                            {
-                                if (acChar == '(')
-                                    break;
-                                if(acChar == '+' || acChar == '-')
-                                {
-                                    i--;
-                                    break;
-                                }
-                                sb.Append(acChar);
-                                i++;
-                                if (i >= s.Length)
-                                    break;
-                            }
-                        }
-
-                        if (i >= s.Length || s[i] == '+' || s[i] == '-')
-                            break;
-
-                    }
-                    partsOfCurrentTerm.Add(sb.ToString());
-                    sb.Clear();
-                    if(i < s.Length)
+                    bracketValues.Add(ParseBracket(s, ref i, ref sb));
+                    if (i < s.Length)
                         acChar = s[i];
-
-                    Variable multiplier1;
-                    if (partsOfCurrentTerm[0] == "-")
-                        multiplier1 = -1;
-                    else if (partsOfCurrentTerm[0] == "+" || partsOfCurrentTerm[0] == "")
-                        multiplier1 = 1;
-                    else
-                        multiplier1 = Variable.Parse(partsOfCurrentTerm[0]);
-
-                    VariableCollection termResult = Parse(partsOfCurrentTerm[1]);
-
-                    partsOfCurrentTerm.RemoveRange(0, 2);
-
-                    foreach (string term in partsOfCurrentTerm)
-                    {
-                        if (term == string.Empty)
-                            continue;
-
-                        termResult *= Parse(term);
-                    }
-                    bracketValues.Add(termResult * multiplier1);
+                    sb.Clear();
                     wasLastBracket = true;
-                    sb.Append(acChar);
                 }
                 else
                 {
-                    sb.Append(acChar);
                     wasLastBracket = false;
                 }
+                sb.Append(acChar);
             }
             if(!wasLastBracket && sb.ToString() != string.Empty)
                 rawTerms.Add(sb.ToString());
@@ -157,6 +88,79 @@ namespace Equations
             bracketValues.ForEach(collection => variables += collection);
 
             return variables;
+        }
+
+        private static VariableCollection ParseBracket(string s, ref int i, ref StringBuilder sb)
+        {
+            char acChar;
+            List<string> partsOfCurrentTerm = new List<string>();
+            bool trueEnd = false;
+            while (!trueEnd)
+            {
+                partsOfCurrentTerm.Add(sb.ToString());
+                sb.Clear();
+                bool insideBracket = s[i] == '(';
+
+                int bracketCount = 0;
+                if (insideBracket)
+                    i++;
+                while (true)
+                {
+                    acChar = s[i];
+
+                    if (insideBracket)
+                    {
+                        if (acChar == '(')
+                            bracketCount++;
+                        else if (acChar == ')')
+                            bracketCount--;
+                        i++;
+                        if (bracketCount < 0)
+                            break;
+                        sb.Append(acChar);
+                    }
+                    else
+                    {
+                        if (acChar == '(')
+                            break;
+                        if (acChar == '+' || acChar == '-')
+                        {
+                            i--;
+                            break;
+                        }
+                        sb.Append(acChar);
+                        i++;
+                        if (i >= s.Length)
+                            break;
+                    }
+                }
+
+                if (i >= s.Length || s[i] == '+' || s[i] == '-')
+                    break;
+
+            }
+            partsOfCurrentTerm.Add(sb.ToString());
+
+            Variable multiplier1;
+            if (partsOfCurrentTerm[0] == "-")
+                multiplier1 = -1;
+            else if (partsOfCurrentTerm[0] == "+" || partsOfCurrentTerm[0] == "")
+                multiplier1 = 1;
+            else
+                multiplier1 = Variable.Parse(partsOfCurrentTerm[0]);
+
+            VariableCollection termResult = Parse(partsOfCurrentTerm[1]);
+
+            partsOfCurrentTerm.RemoveRange(0, 2);
+
+            foreach (string term in partsOfCurrentTerm)
+            {
+                if (term == string.Empty)
+                    continue;
+
+                termResult *= Parse(term);
+            }
+            return termResult * multiplier1;
         }
 
         public static explicit operator Variable(VariableCollection collection)

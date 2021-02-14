@@ -32,7 +32,14 @@ namespace SSPS_HW_Quadratic_Equation
         static void WriteException(Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Exception occured when parsing variable:\n" + ex.ToString());
+            Console.WriteLine("Exception occured when parsing variable:\n\t" + ex.Message);
+            Console.Write("Do you want to see the Stack Trace? (y for yes) ");
+            Console.ResetColor();
+            char keyChar = Console.ReadKey(false).KeyChar;
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Red;
+            if(keyChar == 'y' || keyChar == 'Y')
+                Console.WriteLine(ex.StackTrace);
             Console.ResetColor();
         }
     }
