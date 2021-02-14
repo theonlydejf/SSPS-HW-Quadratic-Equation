@@ -16,29 +16,9 @@ namespace SSPS_HW_Quadratic_Equation
             {
                 try
                 {
-                    Equation equation = Equation.Parse(Console.ReadLine());
-                    equation.SolveForZero();
-                    Console.WriteLine("\n" + equation);
-                    /*VariableCollection variables = new VariableCollection();
-                    while(true)
-                    {
-                        string s = Console.ReadLine();
-                        if (s == "end")
-                            break;
-                        
-                        try
-                        {
-                            variables.Add(Variable.Parse(s));
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteException(ex);
-                        }
-                    }
-                    variables.Simplify();
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(variables);
-                    Console.ResetColor();*/
+                    VariableCollection equation = VariableCollection.Parse(Console.ReadLine());
+                    equation.Simplify();
+                    Console.WriteLine("\n" + equation + "\n");
                 }
                 catch (Exception ex)
                 {

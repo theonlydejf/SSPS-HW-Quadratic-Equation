@@ -48,72 +48,113 @@ namespace Equations
 
         public static VariableCollection Parse(string s)
         {
-            VariableCollection variables = new VariableCollection();
-            string parsable = Regex.Replace(s, @"\s", "").Replace("-", "+-");
-            string[] variablesStr = parsable.Split('+');
+            s = Regex.Replace(s, @"\s", string.Empty);
+            List<string> rawTerms = new List<string>();
+            List<VariableCollection> bracketValues = new List<VariableCollection>();
 
-            for (int i = 0; i < variablesStr.Length; i++)
+            bool wasLastBracket = false;
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < s.Length; i++)
             {
-                string varData = variablesStr[i];
-
-                if(varData.Contains("("))
+                char acChar = s[i];
+                if (acChar == '+' || acChar == '-')
                 {
-                    VariableCollection result = HandleBrackets(variablesStr, ref i);
-                    variables.AddRange(result);
-                    continue;
+                    if (sb.ToString() != string.Empty)
+                    {
+                        rawTerms.Add(sb.ToString());
+                        sb.Clear();
+                        sb.Append(acChar);
+                    }
                 }
-
-                if (varData == string.Empty)
-                    continue;
-
-                variables.Add(Variable.Parse(varData));
-            }
-
-            return variables;
-        }
-
-        private static VariableCollection HandleBrackets(string[] variablesStr, ref int i)
-        {
-            int skipCount = 1;
-            int multiplier = 1;
-            Variable multiplyingVar = 1;
-            if(variablesStr[i][0] != '-' || variablesStr[i][1] != '(')
-            {
-                string[] data = variablesStr[i].Split('(');
-                skipCount = data[0].Length + 1;
-                multiplyingVar = Variable.Parse(data[0]);
-            }
-            else if(variablesStr[i][0] == '-')
-            {
-                multiplier = -1;
-                skipCount = 2;
-            }
-            VariableCollection variables = new VariableCollection();
-            variablesStr[i] = variablesStr[i].Substring(skipCount, variablesStr[i].Length - skipCount);
-            i--;
-
-            while(true)
-            {
-                i++;
-                string varData = variablesStr[i];
-
-                if (varData.Contains("("))
+                else if(acChar == '(')
                 {
-                    VariableCollection result = HandleBrackets(variablesStr, ref i);
-                    variables.AddRange(result);
-                    continue;
+                    List<string> partsOfCurrentTerm = new List<string>();
+                    bool trueEnd = false;
+                    while (!trueEnd)
+                    {
+                        partsOfCurrentTerm.Add(sb.ToString());
+                        sb.Clear();
+                        bool insideBracket = s[i] == '(';
+
+                        int bracketCount = 0;
+                        if (insideBracket)
+                            i++;
+                        while(true)
+                        {
+                            acChar = s[i];
+
+                            if(insideBracket)
+                            {
+                                if (acChar == '(')
+                                    bracketCount++;
+                                else if (acChar == ')')
+                                    bracketCount--;
+                                i++;
+                                if (bracketCount < 0)
+                                    break;
+                                sb.Append(acChar);
+                            }
+                            else
+                            {
+                                if (acChar == '(')
+                                    break;
+                                if(acChar == '+' || acChar == '-')
+                                {
+                                    i--;
+                                    break;
+                                }
+                                sb.Append(acChar);
+                                i++;
+                                if (i >= s.Length)
+                                    break;
+                            }
+                        }
+
+                        if (i >= s.Length || s[i] == '+' || s[i] == '-')
+                            break;
+
+                    }
+                    partsOfCurrentTerm.Add(sb.ToString());
+                    sb.Clear();
+                    if(i < s.Length)
+                        acChar = s[i];
+
+                    Variable multiplier1;
+                    if (partsOfCurrentTerm[0] == "-")
+                        multiplier1 = -1;
+                    else if (partsOfCurrentTerm[0] == "+" || partsOfCurrentTerm[0] == "")
+                        multiplier1 = 1;
+                    else
+                        multiplier1 = Variable.Parse(partsOfCurrentTerm[0]);
+
+                    VariableCollection termResult = Parse(partsOfCurrentTerm[1]);
+
+                    partsOfCurrentTerm.RemoveRange(0, 2);
+
+                    foreach (string term in partsOfCurrentTerm)
+                    {
+                        if (term == string.Empty)
+                            continue;
+
+                        termResult *= Parse(term);
+                    }
+                    bracketValues.Add(termResult * multiplier1);
+                    wasLastBracket = true;
+                    sb.Append(acChar);
                 }
-
-                if (varData == string.Empty)
-                    continue;
-
-                if (varData.Contains(")"))
-                    break;
-
-                variables.Add(Variable.Parse(varData) * multiplier * multiplyingVar);
+                else
+                {
+                    sb.Append(acChar);
+                    wasLastBracket = false;
+                }
             }
+            if(!wasLastBracket && sb.ToString() != string.Empty)
+                rawTerms.Add(sb.ToString());
 
-            variables.Add(Variable.Parse(variablesStr[i].Substring(0, variablesStr[i].Length - 1)) * multiplier * multiplyingVar);
+            VariableCollection variables = new VariableCollection();
+            rawTerms.ForEach(val => variables.Add(Variable.Parse(val)));
+            bracketValues.ForEach(collection => variables += collection);
 
             return variables;
         }
@@ -182,6 +223,19 @@ namespace Equations
         public static VariableCollection operator -(Variable a, VariableCollection b)
         {
             return a + -b;
+        }
+
+        public static VariableCollection operator *(VariableCollection a, VariableCollection b)
+        {
+            VariableCollection variables = new VariableCollection();
+            foreach (Variable ii in a)
+            {
+                foreach (Variable jj in b)
+                {
+                    variables.Add(ii * jj);
+                }
+            }
+            return variables;
         }
 
         public override string ToString()
