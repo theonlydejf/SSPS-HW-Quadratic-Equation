@@ -58,6 +58,13 @@ namespace Equations
             for (int i = 0; i < s.Length; i++)
             {
                 char acChar = s[i];
+                if(acChar == '^')
+                {
+                    sb.Append(acChar);
+                    i++;
+                    sb.Append(s[i]);
+                    continue;
+                }
                 if (acChar == '+' || acChar == '-')
                 {
                     if (sb.ToString() != string.Empty)

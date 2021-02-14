@@ -15,12 +15,26 @@ namespace Equations
         {
             this.identifiers = new VariableIdentifier[identifiers.Length];
             identifiers.CopyTo(this.identifiers, 0);
-            Array.Sort(identifiers, (x, y) => ((string)x).CompareTo(y));
+            Array.Sort(this.identifiers, (x, y) => ((string)x).CompareTo(y));
         }
 
         public VariableIdentifier this[int index]
         {
             get => identifiers[index];
+        }
+
+        public bool HasSameMarkersAs(VariableIdentifierCollection identifiers)
+        {
+            if (Count != identifiers.Count)
+                return false;
+
+            for (int i = 0; i < Count; i++)
+            {
+                if (!this.identifiers[i].Equals(identifiers[i]))
+                    return false;
+            }
+
+            return true;
         }
 
         public IEnumerator<VariableIdentifier> GetEnumerator()
