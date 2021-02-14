@@ -25,13 +25,13 @@ namespace Equations
                     continue;
                 }
 
-                if(!variables.ContainsKey(variable.Identifier))
+                if (!variables.ContainsKey(variable.Identifiers.ToString()))
                 {
-                    variables.Add(variable.Identifier, variable);
+                    variables.Add(variable.Identifiers.ToString(), variable);
                     continue;
                 }
 
-                variables[variable.Identifier] = (Variable)(variables[variable.Identifier] + variable);
+                variables[variable.Identifiers.ToString()] = (Variable)(variables[variable.Identifiers.ToString()] + variable);
                 simplifyCount++;
             }
 
@@ -84,7 +84,7 @@ namespace Equations
                 rawTerms.Add(sb.ToString());
 
             VariableCollection variables = new VariableCollection();
-            rawTerms.ForEach(val => variables.Add(Variable.Parse(val)));
+            rawTerms.ForEach(val => variables.Add((Variable)Variable.Parse(val)));
             bracketValues.ForEach(collection => variables += collection);
 
             return variables;
@@ -147,7 +147,7 @@ namespace Equations
             else if (partsOfCurrentTerm[0] == "+" || partsOfCurrentTerm[0] == "")
                 multiplier1 = 1;
             else
-                multiplier1 = Variable.Parse(partsOfCurrentTerm[0]);
+                multiplier1 = (Variable)Variable.Parse(partsOfCurrentTerm[0]);
 
             VariableCollection termResult = Parse(partsOfCurrentTerm[1]);
 
@@ -177,7 +177,7 @@ namespace Equations
 
         public static implicit operator VariableCollection(double number)
         {
-            return new Variable(null, 1, number);
+            return (Variable)number;
         }
 
         public static VariableCollection operator +(VariableCollection a, Variable b)

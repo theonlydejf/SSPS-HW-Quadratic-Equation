@@ -12,62 +12,117 @@ namespace Equations
     {
         private const string PARSE_NUMBER_PATTERN = @"[+-]?\d*([.,]\d+)?";
         private const string PARSE_IDENTIFIER_PATTERN = @"[a-zA-Z](\^\d+)?";
-        private static string IsStringVariablePattern { get => $@"^(?=.+)({ PARSE_NUMBER_PATTERN })?({ PARSE_IDENTIFIER_PATTERN })?$"; }
+        private static string IsStringVariablePattern { get => $@"^((?=.+)({ PARSE_NUMBER_PATTERN })?({ PARSE_IDENTIFIER_PATTERN })?)+$"; }
+        private static string IsInStringVariablePattern { get => $@"(?=.+)({ PARSE_NUMBER_PATTERN })?({ PARSE_IDENTIFIER_PATTERN })?"; }
 
-        public char? Marker { get; }
-        public int Exponent { get; }
+        private char[] markers;
+        public double[] Exponents { get; }
         public double Multiplier { get; }
-        public string Identifier 
+
+        private VariableIdentifierCollection? identifiers;
+        public VariableIdentifierCollection Identifiers
         {
             get
             {
-                if (Exponent != 1)
-                    return Marker + "^" + Exponent;
-                return Marker == null ? "null" : Marker.ToString();
+                if (identifiers != null)
+                    return identifiers.Value;
+
+                if (markers.Length != Exponents.Length)
+                    throw new Exception("Something went wrong. Not every marker has its own exponent!");
+
+                VariableIdentifier[] _identifiers = new VariableIdentifier[markers.Length];
+                for (int i = 0; i < markers.Length; i++)
+                {
+                    _identifiers[i] = new VariableIdentifier(markers[i], Exponents[i]);
+                }
+                identifiers = new VariableIdentifierCollection(_identifiers);
+                return identifiers.Value;
             }
         }
 
-        public Variable(char? marker, int exponent, double multiplier)
+        public Variable(char[] markers, double[] exponents, double multiplier)
         {
-            Marker = marker;
-            Exponent = exponent;
+            this.markers = markers;
+            Exponents = exponents;
             Multiplier = multiplier;
 
             if (multiplier == 0)
-                Marker = null;
+                markers = null;
+
+            if (Exponents.Length != markers.Length)
+                throw new Exception("Something went wrong. Not every marker has its own exponent!");
+            identifiers = null;
         }
 
-        public static Variable Parse(string s)
+        public Variable(VariableIdentifierCollection identifiers, double multiplier)
         {
-            if (!IsStringVariable(s, out Match match))
+            char[] markers = new char[identifiers.Count];
+            double[] exponents = new double[identifiers.Count];
+
+            for (int i = 0; i < identifiers.Count; i++)
+            {
+                markers[i] = identifiers[i].Marker;
+                exponents[i] = identifiers[i].Exponent;
+            }
+
+            Multiplier = multiplier;
+            this.markers = markers;
+            Exponents = exponents;
+            this.identifiers = null;
+        }
+
+        public static VariableCollection Parse(string s)
+        {
+            if (!IsStringVariable(s, out MatchCollection matches))
                 throw new FormatException();
 
-            string multiplierString = match.Groups[1].Value;
-            double multiplier = 1;
-            if (multiplierString == "-")
-                multiplier = -1;
-            else if (multiplierString != string.Empty && multiplierString != "+")
-                multiplier = double.Parse(multiplierString, NumberStyles.Any, CultureInfo.InvariantCulture);
+            List<Variable> variables = new List<Variable>();
 
-            string identifier = match.Groups[3].Value;
-            char? marker = null;
-            if (identifier != string.Empty)
-                marker = identifier[0];
+            foreach (Match _match in matches)
+            {
+                Match match = Regex.Match(_match.Value, IsInStringVariablePattern);
+                string multiplierString = match.Groups[1].Value;
+                double multiplier = 1;
+                if (multiplierString == "-")
+                    multiplier = -1;
+                else if (multiplierString != string.Empty && multiplierString != "+")
+                    multiplier = double.Parse(multiplierString.Replace(',', '.'), CultureInfo.InvariantCulture);
 
-            int exponent = 1;
-            if(identifier.Length >= 3)
-                exponent = int.Parse(identifier.Substring(2, identifier.Length - 2));
+                //Console.WriteLine(match.Groups[2].Value);
 
-            if (exponent < 0)
-                throw new NotImplementedException("Negative exponents are not yet implemented!");
+                string identifier = match.Groups[3].Value;
+                char? marker = null;
+                if (identifier != string.Empty)
+                    marker = identifier[0];
 
-            return new Variable(marker, exponent, multiplier);
+                double exponent = 1;
+                if (identifier.Length >= 3)
+                    exponent = double.Parse(identifier.Substring(2, identifier.Length - 2));
+
+                if (exponent < 0)
+                    throw new NotImplementedException("Negative exponents are not yet implemented!");
+                variables.Add(new Variable(marker.HasValue ? new[] { marker.Value } : new char[0], marker.HasValue ? new[] { exponent } : new double[0], multiplier));
+            }
+
+            if (variables.Count == 1)
+                return variables[0];
+
+            double finalMultiplier = 1;
+            VariableCollection var = 1;
+
+            foreach (Variable variable in variables)
+            {
+                finalMultiplier *= variable.Multiplier;
+                var *= new Variable(variable.markers, variable.Exponents, 1);
+            }
+
+            return 0;
         }
 
-        private static bool IsStringVariable(string s, out Match match)
+        private static bool IsStringVariable(string s, out MatchCollection matches)
         {
-            match = Regex.Match(s, IsStringVariablePattern);
-            return match.Success;
+            matches = Regex.Matches(s, IsInStringVariablePattern);
+            return matches.Count > 0;
         }
 
         public override bool Equals(object obj)
@@ -80,31 +135,31 @@ namespace Equations
 
             Variable var = (Variable)obj;
 
-            return var.Marker == Marker &&
-                var.Identifier == var.Identifier;
+            return var.markers == markers &&
+                var.Identifiers == var.Identifiers;
         }
 
         public override int GetHashCode()
         {
             int hashCode = -1645715709;
-            hashCode = hashCode * -1521134295 + Marker.GetHashCode();
-            hashCode = hashCode * -1521134295 + Exponent.GetHashCode();
+            hashCode = hashCode * -1521134295 + markers.GetHashCode();
+            hashCode = hashCode * -1521134295 + Exponents.GetHashCode();
             hashCode = hashCode * -1521134295 + Multiplier.GetHashCode();
             return hashCode;
         }
 
         public static VariableCollection operator +(Variable a, Variable b)
         {
-            if(a.Identifier == b.Identifier)
+            if (a.Identifiers.Equals(b.Identifiers))
             {
-                return new Variable(a.Marker, a.Exponent, a.Multiplier + b.Multiplier);
+                return new Variable(a.markers, a.Exponents, a.Multiplier + b.Multiplier);
             }
             return new VariableCollection(a, b);
         }
 
         public static Variable operator -(Variable a)
         {
-            return new Variable(a.Marker, a.Exponent, -a.Multiplier);
+            return new Variable(a.markers, a.Exponents, -a.Multiplier);
         }
 
         public static VariableCollection operator -(Variable a, Variable b)
@@ -114,36 +169,47 @@ namespace Equations
 
         public static Variable operator *(Variable a, Variable b)
         {
-            if (b.Marker == null)
-                return new Variable(a.Marker, a.Exponent, a.Multiplier * b.Multiplier);
-            if (a.Marker == null)
-                return new Variable(b.Marker, b.Exponent, a.Multiplier * b.Multiplier);
+            if (b.markers == null)
+                return new Variable(a.markers, a.Exponents, a.Multiplier * b.Multiplier);
+            if (a.markers == null)
+                return new Variable(b.markers, b.Exponents, a.Multiplier * b.Multiplier);
+            if(a.markers.Length == 1 && a.Identifiers.Equals(b.Identifiers))
+                return new Variable(a.markers, new[] { a.Exponents[0] + b.Exponents[0] }, a.Multiplier * b.Multiplier);
+            if(a.markers.Length == 0 || b.markers.Length == 0)
+            {
+                Variable variable = b;
+                Variable multiplier = a;
+                if(b.markers.Length == 0)
+                {
+                    variable = a;
+                    multiplier = b;
+                }
+                return new Variable(variable.Identifiers, variable.Multiplier * multiplier.Multiplier);
+            }
 
-            if (a.Marker != b.Marker)
-                throw new NotImplementedException("Multiplying two different variables is not yet implemented!");
 
-            return new Variable(a.Marker, a.Exponent + b.Exponent, a.Multiplier * b.Multiplier);
+            throw new NotImplementedException("Multiplying two different variables is not yet implemented!");
         }
 
         public static Variable operator /(Variable a, Variable b)
         {
-            if (b.Marker.HasValue)
+            if (b.markers.Length > 0)
                 throw new NotImplementedException("Dividing by a variable is not yet implemented!");
 
             if (b.Multiplier == 0)
                 throw new DivideByZeroException();
 
-            return new Variable(a.Marker, a.Exponent, a.Multiplier / b.Multiplier);
+            return new Variable(a.Identifiers, a.Multiplier / b.Multiplier);
         }
 
         public static implicit operator Variable(double number)
         {
-            return new Variable(null, 1, number);
+            return new Variable(new char[0], new double[0], number);
         }
 
         public static explicit operator double(Variable variable)
         {
-            if (variable.Marker.HasValue)
+            if (variable.markers.Length > 0)
                 throw new ArgumentException("Inputed variable is not a raw number!");
 
             return variable.Multiplier;
@@ -154,17 +220,17 @@ namespace Equations
         internal string ToString(bool withoutSigns)
         {
             double val = Multiplier;
-            if(withoutSigns)
+            if (withoutSigns)
                 val = Math.Abs(Multiplier);
 
-            if (Marker == null)
+            if (markers == null)
                 return val.ToString();
             if (val == 1)
-                return Identifier;
+                return Identifiers.ToString();
             if (val == -1)
-                return "-" + Identifier;
+                return "-" + Identifiers;
 
-            return val + Identifier;
+            return val + Identifiers.ToString();
         }
     }
 }
