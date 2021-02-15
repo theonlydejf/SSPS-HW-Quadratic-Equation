@@ -23,6 +23,33 @@ namespace Equations
             get => identifiers[index];
         }
 
+        public VariableIdentifierCollection Clone()
+        {
+            VariableIdentifier[] identifiers = new VariableIdentifier[this.identifiers.Length];
+            this.identifiers.CopyTo(identifiers, 0);
+            return new VariableIdentifierCollection(identifiers);
+        }
+
+        public char[] GetMarkers()
+        {
+            char[] _out = new char[identifiers.Length];
+            for (int i = 0; i < identifiers.Length; i++)
+            {
+                _out[i] = identifiers[i].Marker;
+            }
+            return _out;
+        }
+
+        public double[] GetExponents()
+        {
+            double[] _out = new double[identifiers.Length];
+            for (int i = 0; i < identifiers.Length; i++)
+            {
+                _out[i] = identifiers[i].Exponent;
+            }
+            return _out;
+        }
+
         public bool HasSameMarkersAs(VariableIdentifierCollection identifiers)
         {
             if (Count != identifiers.Count)
