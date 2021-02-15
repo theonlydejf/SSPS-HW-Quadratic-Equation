@@ -58,6 +58,7 @@ namespace Equations
         public static VariableCollection Parse(string s)
         {
             s = Regex.Replace(s, @"\s", string.Empty).Replace(',', '.');
+                
             List<string> rawTerms = new List<string>();
             List<VariableCollection> bracketValues = new List<VariableCollection>();
             do
@@ -66,7 +67,7 @@ namespace Equations
                 s = Regex.Replace(s, MultiplyNumbersPattern, ReplaceMultiplyOperand);
             } while (replaced);
 
-            s = Regex.Replace(s, @"(?<!\*)\*(?!\*)", " ");
+            s = Regex.Replace(s, @"(?<!\*)\*(?!\*)", "");
 
             do
             {
@@ -213,8 +214,8 @@ namespace Equations
                 }
             }
 
-            if (partsOfCurrentTerm[partsOfCurrentTerm.Count - 1] == "/")
-                throw new FormatException();
+            //if (partsOfCurrentTerm[partsOfCurrentTerm.Count - 1] == "/")
+            //    throw new FormatException();
 
             List<VariableCollection> dividers = new List<VariableCollection>();
             dividers.Add(1);
@@ -356,11 +357,20 @@ namespace Equations
 
         public static VariableCollection operator /(VariableCollection a, VariableCollection b)
         {
-            if (a.Count > 1)
-                throw new NotImplementedException("Dividing polynomials is not yet implemented!");
+            //if (a.Count > 1 )
+            //    throw new NotImplementedException("Dividing polynomials is not yet implemented!");
             if(b.Count > 1)
                 throw new NotImplementedException("Dividing by polynomials is not yet implemented!");
-            return (Variable)a / (Variable)b;
+
+            VariableCollection result = new VariableCollection();
+            Variable divider = (Variable)b;
+
+            foreach (Variable variable in a)
+            {
+                result.Add(variable / divider);
+            }
+
+            return result;
         }
 
         public override string ToString()

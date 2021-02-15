@@ -8,26 +8,26 @@ namespace Equations
 {
     public class Equation
     {
-        private VariableCollection leftSide;
-        private VariableCollection rightSide;
+        internal protected VariableCollection LeftSide;
+        internal protected VariableCollection RightSide;
 
         public Equation(VariableCollection leftSide, VariableCollection rightSide)
         {
-            this.leftSide = leftSide;
-            this.rightSide = rightSide;
+            this.LeftSide = leftSide;
+            this.RightSide = rightSide;
         }
 
-        public void Simplify()
+        public void SimplifyEachSide()
         {
-            leftSide.Simplify();
-            rightSide.Simplify();
+            LeftSide.Simplify();
+            RightSide.Simplify();
         }
 
         public void SolveForZero()
         {
-            leftSide -= rightSide;
-            rightSide = 0;
-            leftSide.Simplify();
+            LeftSide -= RightSide;
+            RightSide = 0;
+            LeftSide.Simplify();
         }
 
         public static Equation Parse(string s)
@@ -43,7 +43,7 @@ namespace Equations
 
         public override string ToString()
         {
-            return $"{ leftSide } = { rightSide }";
+            return $"{ LeftSide } = { RightSide }";
         }
     }
 }

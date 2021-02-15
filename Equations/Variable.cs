@@ -11,7 +11,7 @@ namespace Equations
     public struct Variable
     {
         private const string PARSE_NUMBER_PATTERN = @"[+-]?\d*([.,]\d+)?";
-        private static string ParseIdentifierPattern = $@"[a-zA-Z](\^{ PARSE_NUMBER_PATTERN })?";
+        private static string ParseIdentifierPattern = $@"[a-zA-Z](?!\^(\-?([a-zA-Z])|$))(\^+?\d*([.,]\d+)?)?";
         private static string IsStringVariablePattern { get => $@"^((?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?)+$"; }
         private static string IsInStringVariablePattern { get => $@"(?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?"; }
 
@@ -48,19 +48,25 @@ namespace Equations
             if (markers.Length != exponents.Length)
                 throw new Exception("Something went wrong. Not every marker has its own exponent!");
 
-            VariableIdentifier[] _identifiers = new VariableIdentifier[markers.Length];
+            List<VariableIdentifier> _identifiers = new List<VariableIdentifier>();
             for (int i = 0; i < markers.Length; i++)
             {
-                _identifiers[i] = new VariableIdentifier(markers[i], exponents[i]);
+                if (exponents[i] == 0)
+                    continue;
+                _identifiers.Add(new VariableIdentifier(markers[i], exponents[i]));
             }
 
-            return new VariableIdentifierCollection(_identifiers);
+            return new VariableIdentifierCollection(_identifiers.ToArray());
         }
 
         public static Variable Parse(string s)
         {
             if (s.Contains('/'))
-                throw new NotImplementedException("Polynomials are not yet implemented!");
+            {
+                string[] sides = s.Split(new[] { '/' }, 2);
+
+                return MultiplyDifferentVariables(new[] { Parse(sides[0] == string.Empty ? "1" : sides[0]), Parse(sides[1]).GetInverse() });
+            }
 
             if (!IsStringVariable(s, out MatchCollection matches))
                 throw new FormatException();
@@ -207,12 +213,24 @@ namespace Equations
         public static Variable operator /(Variable a, Variable b)
         {
             if (b.Identifiers.Count > 0)
-                throw new NotImplementedException("Dividing by a variable is not yet implemented!");
+                return MultiplyDifferentVariables(new[] { a, b.GetInverse() });
 
             if (b.Multiplier == 0)
                 throw new DivideByZeroException();
 
             return new Variable(a.Identifiers, a.Multiplier / b.Multiplier);
+        }
+
+        public Variable GetInverse()
+        {
+            VariableIdentifier[] newBIdentifiers = new VariableIdentifier[Identifiers.Count];
+            for (int i = 0; i < Identifiers.Count; i++)
+            {
+                VariableIdentifier acIdentifier = Identifiers[i];
+                newBIdentifiers[i] = new VariableIdentifier(acIdentifier.Marker, acIdentifier.Exponent * -1);
+            }
+
+            return new Variable(new VariableIdentifierCollection(newBIdentifiers), 1d / Multiplier);
         }
 
         public static implicit operator Variable(double number)

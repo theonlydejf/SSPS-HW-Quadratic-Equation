@@ -17,13 +17,23 @@ namespace SSPS_HW_Quadratic_Equation
             {
                 try
                 {
-                    VariableCollection equation = VariableCollection.Parse(Console.ReadLine());
-                    equation.Simplify();
-                    Console.WriteLine("\n" + equation + "\n");
+
+                    //VariableCollection equation = VariableCollection.Parse(Console.ReadLine());
+                    //equation.Simplify();
+
+                    Equation equation = Equation.Parse(Console.ReadLine());
+                    QuadraticEquation quadraticEquation = new QuadraticEquation(equation);
+                    VariableCollection[] result = quadraticEquation.Solve();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    for (int i = 0; i < result.Length; i++)
+                    {
+                        Console.WriteLine($"x{ i } = { result[i] }");
+                    }
+                    Console.ResetColor();
                 }
                 catch (Exception ex)
                 {
-                    WriteException(ex, false);
+                    WriteException(ex, true);
                 }            
             }
 
@@ -34,6 +44,7 @@ namespace SSPS_HW_Quadratic_Equation
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Exception occured: " + ex.Message);
+            Console.ResetColor();
 
             if (!askForStacktrace)
                 return;

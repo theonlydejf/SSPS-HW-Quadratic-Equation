@@ -57,11 +57,21 @@ namespace Equations
 
             for (int i = 0; i < Count; i++)
             {
-                if (!this.identifiers[i].Equals(identifiers[i]))
+                if (!this.identifiers[i].Marker.Equals(identifiers[i].Marker))
                     return false;
             }
 
             return true;
+        }
+
+        public bool ContainsMarker(char marker)
+        {
+            foreach (VariableIdentifier identifier in identifiers)
+            {
+                if (identifier.Marker == 'i')
+                    return true;
+            }
+            return false;
         }
 
         public IEnumerator<VariableIdentifier> GetEnumerator()
