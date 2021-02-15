@@ -15,63 +15,46 @@ namespace Equations
         private static string IsStringVariablePattern { get => $@"^((?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?)+$"; }
         private static string IsInStringVariablePattern { get => $@"(?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?"; }
 
-        private char[] markers;
-        public double[] Exponents { get; }
         public double Multiplier { get; }
 
-        private VariableIdentifierCollection? identifiers;
-        public VariableIdentifierCollection Identifiers
-        {
-            get
-            {
-                if (identifiers != null)
-                    return identifiers.Value;
-
-                if (markers.Length != Exponents.Length)
-                    throw new Exception("Something went wrong. Not every marker has its own exponent!");
-
-                VariableIdentifier[] _identifiers = new VariableIdentifier[markers.Length];
-                for (int i = 0; i < markers.Length; i++)
-                {
-                    _identifiers[i] = new VariableIdentifier(markers[i], Exponents[i]);
-                }
-                identifiers = new VariableIdentifierCollection(_identifiers);
-                return identifiers.Value;
-            }
-        }
+        public VariableIdentifierCollection Identifiers { get; }
 
         public Variable(char[] markers, double[] exponents, double multiplier)
         {
-            this.markers = markers;
-            Exponents = exponents;
             Multiplier = multiplier;
 
             if (multiplier == 0)
             {
                 markers = new char[0];
-                Exponents = new double[0];
+                exponents = new double[0];
             }
 
-            if (Exponents.Length != markers.Length)
-                throw new Exception("Something went wrong. Not every marker has its own exponent!");
-            identifiers = null;
+            Identifiers = CreateIdentifiers(exponents, markers);
         }
 
         public Variable(VariableIdentifierCollection identifiers, double multiplier)
         {
-            char[] markers = new char[identifiers.Count];
-            double[] exponents = new double[identifiers.Count];
-
-            for (int i = 0; i < identifiers.Count; i++)
+            Multiplier = multiplier;
+            if(multiplier == 0)
             {
-                markers[i] = identifiers[i].Marker;
-                exponents[i] = identifiers[i].Exponent;
+                Identifiers = CreateIdentifiers(new double[0], new char[0]);
+                return;
+            }
+            Identifiers = identifiers.Clone();
+        }
+
+        private static VariableIdentifierCollection CreateIdentifiers(double[] exponents, char[] markers)
+        {
+            if (markers.Length != exponents.Length)
+                throw new Exception("Something went wrong. Not every marker has its own exponent!");
+
+            VariableIdentifier[] _identifiers = new VariableIdentifier[markers.Length];
+            for (int i = 0; i < markers.Length; i++)
+            {
+                _identifiers[i] = new VariableIdentifier(markers[i], exponents[i]);
             }
 
-            Multiplier = multiplier;
-            this.markers = markers;
-            Exponents = exponents;
-            this.identifiers = null;
+            return new VariableIdentifierCollection(_identifiers);
         }
 
         public static Variable Parse(string s)
@@ -169,15 +152,14 @@ namespace Equations
 
             Variable var = (Variable)obj;
 
-            return var.markers == markers &&
-                var.Identifiers == var.Identifiers;
+            return Multiplier == var.Multiplier && 
+                Identifiers.Equals(var.Identifiers);
         }
 
         public override int GetHashCode()
         {
             int hashCode = -1645715709;
-            hashCode = hashCode * -1521134295 + markers.GetHashCode();
-            hashCode = hashCode * -1521134295 + Exponents.GetHashCode();
+            hashCode = hashCode * -1521134295 + Identifiers.GetHashCode();
             hashCode = hashCode * -1521134295 + Multiplier.GetHashCode();
             return hashCode;
         }
@@ -186,14 +168,14 @@ namespace Equations
         {
             if (a.Identifiers.Equals(b.Identifiers))
             {
-                return new Variable(a.markers, a.Exponents, a.Multiplier + b.Multiplier);
+                return new Variable(a.Identifiers, a.Multiplier + b.Multiplier);
             }
             return new VariableCollection(a, b);
         }
 
         public static Variable operator -(Variable a)
         {
-            return new Variable(a.markers, a.Exponents, -a.Multiplier);
+            return new Variable(a.Identifiers, -a.Multiplier);
         }
 
         public static VariableCollection operator -(Variable a, Variable b)
@@ -203,17 +185,15 @@ namespace Equations
 
         public static Variable operator *(Variable a, Variable b)
         {
-            if (b.markers == null)
-                return new Variable(a.markers, a.Exponents, a.Multiplier * b.Multiplier);
-            if (a.markers == null)
-                return new Variable(b.markers, b.Exponents, a.Multiplier * b.Multiplier);
-            if(a.markers.Length == 1 && a.Identifiers.HasSameMarkersAs(b.Identifiers))
-                return new Variable(a.markers, new[] { a.Exponents[0] + b.Exponents[0] }, a.Multiplier * b.Multiplier);
-            if(a.markers.Length == 0 || b.markers.Length == 0)
+            char[] aMarkers = a.Identifiers.GetMarkers();
+            char[] bMarkers = b.Identifiers.GetMarkers();
+            if (a.Identifiers.Count == 1 && a.Identifiers.HasSameMarkersAs(b.Identifiers))
+                return new Variable(aMarkers, new[] { a.Identifiers.GetExponents()[0] + b.Identifiers.GetExponents()[0] }, a.Multiplier * b.Multiplier);
+            if(a.Identifiers.Count == 0 || b.Identifiers.Count == 0)
             {
                 Variable variable = b;
                 Variable multiplier = a;
-                if(b.markers.Length == 0)
+                if(b.Identifiers.Count == 0)
                 {
                     variable = a;
                     multiplier = b;
@@ -222,13 +202,11 @@ namespace Equations
             }
 
             return MultiplyDifferentVariables(new[] { a, b });
-
-            //throw new NotImplementedException("Multiplying two different variables is not yet implemented!");
         }
 
         public static Variable operator /(Variable a, Variable b)
         {
-            if (b.markers.Length > 0)
+            if (b.Identifiers.Count > 0)
                 throw new NotImplementedException("Dividing by a variable is not yet implemented!");
 
             if (b.Multiplier == 0)
@@ -244,7 +222,7 @@ namespace Equations
 
         public static explicit operator double(Variable variable)
         {
-            if (variable.markers.Length > 0)
+            if (variable.Identifiers.Count > 0)
                 throw new ArgumentException("Inputed variable is not a raw number!");
 
             return variable.Multiplier;
@@ -258,9 +236,9 @@ namespace Equations
             if (withoutSigns)
                 val = Math.Abs(Multiplier);
 
-            if (markers == null)
+            if (Identifiers.Count <= 0)
                 return val.ToString();
-            if (val == 1 && markers.Length > 0)
+            if (val == 1 && Identifiers.Count > 0)
                 return Identifiers.ToString();
             else if (val == 1)
                 return "1";
