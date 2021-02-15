@@ -76,6 +76,9 @@ namespace Equations
 
         public static Variable Parse(string s)
         {
+            if (s.Contains('/'))
+                throw new NotImplementedException("Polynomials are not yet implemented!");
+
             if (!IsStringVariable(s, out MatchCollection matches))
                 throw new FormatException();
 
@@ -89,7 +92,7 @@ namespace Equations
                 if (multiplierString == "-")
                     multiplier = -1;
                 else if (multiplierString != string.Empty && multiplierString != "+")
-                    multiplier = double.Parse(multiplierString.Replace(',', '.'), CultureInfo.InvariantCulture);
+                    multiplier = double.Parse(multiplierString, CultureInfo.InvariantCulture);
 
                 //Console.WriteLine(match.Groups[2].Value);
 
@@ -100,7 +103,7 @@ namespace Equations
 
                 double exponent = 1;
                 if (identifier.Length >= 3)
-                    exponent = double.Parse(identifier.Substring(2, identifier.Length - 2).Replace(',', '.'), CultureInfo.InvariantCulture);
+                    exponent = double.Parse(identifier.Substring(2, identifier.Length - 2), CultureInfo.InvariantCulture);
 
                 variables.Add(new Variable(marker.HasValue ? new[] { marker.Value } : new char[0], marker.HasValue ? new[] { exponent } : new double[0], multiplier));
             }
@@ -146,7 +149,14 @@ namespace Equations
         private static bool IsStringVariable(string s, out MatchCollection matches)
         {
             matches = Regex.Matches(s, IsInStringVariablePattern);
-            return matches.Count > 0;
+            int expectedIndex = 0;
+            foreach (Match ii in matches)
+            {
+                if (ii.Index != expectedIndex)
+                    return false;
+                expectedIndex += ii.Length;
+            }
+            return matches.Count > 0 && expectedIndex == s.Length;
         }
 
         public override bool Equals(object obj)
@@ -257,7 +267,7 @@ namespace Equations
             if (val == -1)
                 return "-" + Identifiers;
 
-            return val + Identifiers.ToString();
+            return (val + Identifiers.ToString()).Replace(',', '.');
         }
     }
 }

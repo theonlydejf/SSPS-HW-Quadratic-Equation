@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Equations;
 
@@ -22,17 +23,20 @@ namespace SSPS_HW_Quadratic_Equation
                 }
                 catch (Exception ex)
                 {
-                    WriteException(ex);
+                    WriteException(ex, false);
                 }            
             }
 
             Console.ReadKey(true);
         }
 
-        static void WriteException(Exception ex)
+        static void WriteException(Exception ex, bool askForStacktrace = true)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Exception occured when parsing variable:\n\t" + ex.Message);
+            Console.WriteLine("Exception occured: " + ex.Message);
+
+            if (!askForStacktrace)
+                return;
             Console.Write("Do you want to see the Stack Trace? (y for yes) ");
             Console.ResetColor();
             char keyChar = Console.ReadKey(false).KeyChar;

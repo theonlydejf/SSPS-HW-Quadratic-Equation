@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -8,6 +9,13 @@ namespace Equations
 {
     public class VariableCollection : List<Variable>
     {
+        private const string NUMBER_PATTERN = @"([+-]?(?=\.?\d)\d*([.,]\d+)?)";
+        //(?=.*\d\*(([+-].?\d)|(.?\d)))
+        private static string MultiplyNumbersPattern { get => $@"{ NUMBER_PATTERN }\*{ NUMBER_PATTERN }"; }
+        private static string DivideNumberByNumberPattern { get => $@"{ NUMBER_PATTERN }\/{ NUMBER_PATTERN }"; }
+        private static string DivideVariableByNumberPattern { get => $@"(?<=.)(?<!\d)\/{ NUMBER_PATTERN }(?=[+\-\)\/]|$)"; }
+
+
         public VariableCollection(params Variable[] variables) : base(variables)
         {
             
@@ -46,11 +54,31 @@ namespace Equations
                 Simplify();
         }
 
+        private static bool replaced = false;
         public static VariableCollection Parse(string s)
         {
-            s = Regex.Replace(s, @"\s", string.Empty);
+            s = Regex.Replace(s, @"\s", string.Empty).Replace(',', '.');
             List<string> rawTerms = new List<string>();
             List<VariableCollection> bracketValues = new List<VariableCollection>();
+            do
+            {
+                replaced = false;
+                s = Regex.Replace(s, MultiplyNumbersPattern, ReplaceMultiplyOperand);
+            } while (replaced);
+
+            s = Regex.Replace(s, @"(?<!\*)\*(?!\*)", " ");
+
+            do
+            {
+                replaced = false;
+                s = Regex.Replace(s, DivideVariableByNumberPattern, ReplaceDivideVariableOperand);
+            } while (replaced);
+
+            do
+            {
+                replaced = false;
+                s = Regex.Replace(s, DivideNumberByNumberPattern, ReplaceDivideNumbersOperand);
+            } while (replaced);
 
             bool wasLastBracket = false;
 
@@ -148,26 +176,103 @@ namespace Equations
             }
             partsOfCurrentTerm.Add(sb.ToString());
 
-            Variable multiplier1;
+            //Variable multiplier1;
+            //bool dividing = false;
             if (partsOfCurrentTerm[0] == "-")
-                multiplier1 = -1;
+                partsOfCurrentTerm[0] = "-1";
             else if (partsOfCurrentTerm[0] == "+" || partsOfCurrentTerm[0] == "")
-                multiplier1 = 1;
-            else
-                multiplier1 = (Variable)Variable.Parse(partsOfCurrentTerm[0]);
+                partsOfCurrentTerm[0] = "1";
 
-            VariableCollection termResult = Parse(partsOfCurrentTerm[1]);
+            // Create shallow copy of partsOfCurrentTerm (in C# string is a value type,
+            // so we don't need to create a deep copy)
+            List<string> partsOfCurrentTermCopy = partsOfCurrentTerm.GetRange(0, partsOfCurrentTerm.Count);
+            partsOfCurrentTerm.Clear();
 
-            partsOfCurrentTerm.RemoveRange(0, 2);
-
-            foreach (string term in partsOfCurrentTerm)
+            //TODO kopirovat partsOfCurrentTerm a iterovat zkrz to
+            for(int jj = 0; jj < partsOfCurrentTermCopy.Count; jj++)
             {
-                if (term == string.Empty)
+                string term = partsOfCurrentTermCopy[jj];
+
+                if (!term.Contains("/") || term == "/")
+                {
+                    partsOfCurrentTerm.Add(term);
+                    continue;
+                }
+
+                string[] parts = term.Split('/');
+
+                for (int j = 0; j < parts.Length; j++)
+                {
+                    if (parts[j] == string.Empty)
+                        parts[j] = "1";
+                    else if (parts[j] == "-" && j != 0)
+                        parts[j] = "-1";
+
+                    partsOfCurrentTerm.Add(parts[j]);
+                    partsOfCurrentTerm.Add("/");
+                }
+            }
+
+            if (partsOfCurrentTerm[partsOfCurrentTerm.Count - 1] == "/")
+                throw new FormatException();
+
+            List<VariableCollection> dividers = new List<VariableCollection>();
+            dividers.Add(1);
+
+            for (int j = partsOfCurrentTerm.Count - 1; j >= 0; j--)
+            {
+                if (partsOfCurrentTerm[j] == string.Empty)
                     continue;
 
-                termResult *= Parse(term);
+                if (partsOfCurrentTerm[j] == "/")
+                {
+                    dividers[dividers.Count - 1].Simplify();
+                    dividers.Add(1);
+                    continue;
+                }
+
+                dividers[dividers.Count - 1] *= Parse(partsOfCurrentTerm[j]);
             }
-            return termResult * multiplier1;
+            dividers[dividers.Count - 1].Simplify();
+
+            VariableCollection termResult = 1;
+            if (dividers.Count == 1)
+            {
+                termResult = dividers[0];
+            }
+            else
+            {
+                termResult = dividers[dividers.Count - 1];
+                for (int j = dividers.Count - 2; j >= 0; j--)
+                {
+                    termResult = termResult / dividers[j];
+                }
+            }
+
+            return termResult;
+        }
+
+        private static string ReplaceMultiplyOperand(Match match)
+        {
+            double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            double number2 = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+            replaced = true;
+            return (number1 * number2).ToString().Replace(',', '.');
+        }
+
+        private static string ReplaceDivideNumbersOperand(Match match)
+        {
+            double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            double number2 = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+            replaced = true;
+            return (number1 / number2).ToString().Replace(',', '.');
+        }
+
+        private static string ReplaceDivideVariableOperand(Match match)
+        {
+            double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            replaced = true;
+            return (1d / number1).ToString().Replace(',','.');
         }
 
         public static explicit operator Variable(VariableCollection collection)
@@ -247,6 +352,15 @@ namespace Equations
                 }
             }
             return variables;
+        }
+
+        public static VariableCollection operator /(VariableCollection a, VariableCollection b)
+        {
+            if (a.Count > 1)
+                throw new NotImplementedException("Dividing polynomials is not yet implemented!");
+            if(b.Count > 1)
+                throw new NotImplementedException("Dividing by polynomials is not yet implemented!");
+            return (Variable)a / (Variable)b;
         }
 
         public override string ToString()

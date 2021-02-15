@@ -13,12 +13,7 @@ namespace Equations
             Exponent = exponent;
         }
 
-        public static implicit operator string(VariableIdentifier identifier)
-        {
-            if (identifier.Exponent != 1)
-                return identifier.Marker + "^" + identifier.Exponent;
-            return identifier.Marker.ToString();
-        }
+        public static implicit operator string(VariableIdentifier identifier) => identifier.ToString();
 
         public override bool Equals(object obj)
         {
@@ -38,6 +33,13 @@ namespace Equations
             hashCode = hashCode * -1521134295 + EqualityComparer<char?>.Default.GetHashCode(Marker);
             hashCode = hashCode * -1521134295 + Exponent.GetHashCode();
             return hashCode;
+        }
+
+        public override string ToString()
+        {
+            if (Exponent != 1)
+                return Marker + "^" + Exponent.ToString().Replace(',', '.');
+            return Marker.ToString();
         }
     }
 }
