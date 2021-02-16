@@ -13,7 +13,8 @@ namespace Equations
         private const string PARSE_NUMBER_PATTERN = @"[+-]?\d*([.,]\d+)?";
         private static string ParseIdentifierPattern = $@"[a-zA-Z](?!\^(\-?([a-zA-Z])|$))(\^+?\d*([.,]\d+)?)?";
         private static string IsStringVariablePattern { get => $@"^((?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?)+$"; }
-        private static string IsInStringVariablePattern { get => $@"(?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?"; }
+        //private static string IsInStringVariablePattern { get => $@"(?=.+)({ PARSE_NUMBER_PATTERN })?({ ParseIdentifierPattern })?"; }
+        private static string IsInStringVariablePattern { get => @"(?=.)(((?<!\^|(\^\-))[+-]?\d+([.,]\d+)?)|[+-])?([a-zZ-Z](\^\-?\d+([.,]\d+)?)?)?"; }
 
         public double Multiplier { get; }
 
@@ -66,7 +67,13 @@ namespace Equations
             {
                 string[] sides = s.Split(new[] { '/' }, 2);
 
-                return MultiplyDifferentVariables(new[] { Parse(sides[0] == string.Empty ? "1" : sides[0]), Parse(sides[1]).GetInverse() });
+                Variable a = Parse(sides[0] == string.Empty ? "1" : sides[0]);
+                Variable b = Parse(sides[1]);
+
+                if (b.Multiplier == 0)
+                    throw new DivideByZeroException();
+
+                return MultiplyDifferentVariables(new[] { a, b.GetInverse() });
             }
 
             if (!IsStringVariable(s, out MatchCollection matches))
@@ -86,7 +93,7 @@ namespace Equations
 
                 //Console.WriteLine(match.Groups[2].Value);
 
-                string identifier = match.Groups[3].Value;
+                string identifier = match.Groups[5].Value;
                 char? marker = null;
                 if (identifier != string.Empty)
                     marker = identifier[0];

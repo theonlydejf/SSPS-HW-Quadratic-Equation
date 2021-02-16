@@ -12,6 +12,7 @@ namespace Equations
         private const string NUMBER_PATTERN = @"([+-]?(?=\.?\d)\d*([.,]\d+)?)";
         //(?=.*\d\*(([+-].?\d)|(.?\d)))
         private static string MultiplyNumbersPattern { get => $@"{ NUMBER_PATTERN }\*{ NUMBER_PATTERN }"; }
+        private static string NumberToPowerPattern { get => $@"{ NUMBER_PATTERN }\^{ NUMBER_PATTERN }"; }
         private static string DivideNumberByNumberPattern { get => $@"{ NUMBER_PATTERN }\/{ NUMBER_PATTERN }"; }
         private static string DivideVariableByNumberPattern { get => $@"(?<=.)(?<!\d)\/{ NUMBER_PATTERN }(?=[+\-\)\/]|$)"; }
 
@@ -59,7 +60,16 @@ namespace Equations
         public static VariableCollection Parse(string s)
         {
             s = Regex.Replace(s, @"\s", string.Empty).Replace(',', '.');
-                
+
+            if (Regex.IsMatch(s, @"[+-][+-]"))
+                throw new FormatException();
+
+            if (Regex.IsMatch(s, @"[+-]$"))
+                throw new FormatException();
+
+            if (s[0] == '*')
+                throw new FormatException();
+
             List<string> rawTerms = new List<string>();
             List<VariableCollection> bracketValues = new List<VariableCollection>();
             do
@@ -67,6 +77,11 @@ namespace Equations
                 replaced = false;
                 s = Regex.Replace(s, MultiplyNumbersPattern, ReplaceMultiplyOperand);
             } while (replaced);
+
+            s = Regex.Replace(s, @"(?<!\*)\*\-(?!\*)", "(-1)");
+
+            s = Regex.Replace(s, @"(?<!\*)\*\+(?!\*)", "(1)");
+
 
             s = Regex.Replace(s, @"(?<!\*)\*(?!\*)", "");
 
@@ -80,6 +95,12 @@ namespace Equations
             {
                 replaced = false;
                 s = Regex.Replace(s, DivideNumberByNumberPattern, ReplaceDivideNumbersOperand);
+            } while (replaced);
+
+            do
+            {
+                replaced = false;
+                s = Regex.Replace(s, NumberToPowerPattern, ReplaceNumberToPowerOperand);
             } while (replaced);
 
             bool wasLastBracket = false;
@@ -160,7 +181,7 @@ namespace Equations
                     {
                         if (acChar == '(')
                             break;
-                        if (acChar == '+' || acChar == '-')
+                        if ((acChar == '+' || acChar == '-') && s[i - 1] != '^' && s[i - 1] != '/')
                         {
                             i--;
                             break;
@@ -195,6 +216,19 @@ namespace Equations
             {
                 string term = partsOfCurrentTermCopy[jj];
 
+                if(term[0] == '^')
+                {
+                    double power = double.Parse(term.Substring(1, term.Length - 1), CultureInfo.InvariantCulture);
+                    if ((power % 1) != 0)
+                        throw new InvalidOperationException("Cannot compute polynoms with non-integer values!");
+                    if (power < 0)
+                        throw new NotImplementedException("Polynoms with negative power are not yet implemented!");
+                    for (int j = 0; j < power - 1; j++)
+                    {
+                        partsOfCurrentTerm.Add(partsOfCurrentTermCopy[jj - 1]);
+                    }
+                    continue;
+                }
                 if (!term.Contains("/") || term == "/")
                 {
                     partsOfCurrentTerm.Add(term);
@@ -266,13 +300,29 @@ namespace Equations
         {
             double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
             double number2 = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+
+            if (number2 == 0)
+                throw new DivideByZeroException();
+
             replaced = true;
             return (number1 / number2).ToString().Replace(',', '.');
+        }
+
+        private static string ReplaceNumberToPowerOperand(Match match)
+        {
+            double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            double number2 = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+            replaced = true;
+            return (Math.Pow(number1, number2)).ToString().Replace(',', '.');
         }
 
         private static string ReplaceDivideVariableOperand(Match match)
         {
             double number1 = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+
+            if (number1 == 0)
+                throw new DivideByZeroException();
+
             replaced = true;
             return (1d / number1).ToString().Replace(',','.');
         }
@@ -378,10 +428,7 @@ namespace Equations
 
         public string ToString(bool useUnicodeCharacteres)
         {
-            if (Count == 0)
-                return "";
-
-            if (Count == 1 && this[0].Multiplier == 0)
+            if (Count == 0 || (Count == 1 && this[0].Multiplier == 0))
                 return "0";
 
             string _out = this[0].ToString(false, useUnicodeCharacteres);
