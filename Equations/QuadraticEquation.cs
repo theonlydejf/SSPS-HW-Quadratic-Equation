@@ -6,10 +6,20 @@ namespace Equations
 {
     public class QuadraticEquation : Equation, ISolvableEquation
     {
+        public VariableIdentifierCollection ResultingVariable { get; private set; }
+
         public QuadraticEquation(Equation equation) : base(equation.LeftSide, equation.RightSide)
         {
-            SolveForZero();
+            SimpleSolveForZero();
 
+            VariableIdentifierCollection resultingVariable;
+
+            CheckIfValid(out resultingVariable);
+            ResultingVariable = resultingVariable;
+        }
+
+        private void CheckIfValid(out VariableIdentifierCollection resultingVariable)
+        {
             VariableIdentifierCollection? defaultIdentifiers = null;
             foreach (var ii in LeftSide)
             {
@@ -38,19 +48,27 @@ namespace Equations
                     double[] exponents = identifiers.GetExponents();
                     for (int j = 1; j < exponents.Length; j++)
                     {
-                        if(exponents[j] != exponents[j - 1])
+                        if (exponents[j] != exponents[j - 1])
                             throw new ArgumentException($"Inputted equation isn't a quadratic equation (term \"{ variable }\" has two or more different exponents)!");
                     }
 
-                    if(exponents[0] > 2 || exponents[0] < 1)
+                    if (exponents[0] > 2 || exponents[0] < 1)
                         throw new ArgumentException($"Inputted equation isn't a quadratic equation (term \"{ variable }\" has wrong exponent)!");
                     if (exponents[0] == 2)
                         foundSecondPower = true;
                 }
 
             }
-                if (!foundSecondPower)
-                    throw new ArgumentException("Inputted equation is linear and not quadratic!");
+            if (!foundSecondPower)
+                throw new ArgumentException("Inputted equation is linear and not quadratic!");
+
+            VariableIdentifier[] solvableIdentifiers = new VariableIdentifier[defaultIdentifiers.Value.Count];
+            for (int i = 0; i < solvableIdentifiers.Length; i++)
+            {
+                solvableIdentifiers[i] = new VariableIdentifier(defaultIdentifiers.Value[i].Marker, 1);
+            }
+
+            resultingVariable = new VariableIdentifierCollection(solvableIdentifiers);
         }
 
         public VariableCollection[] Solve()

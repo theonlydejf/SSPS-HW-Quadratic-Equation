@@ -85,12 +85,14 @@ namespace Equations
 
         IEnumerator IEnumerable.GetEnumerator() => identifiers.GetEnumerator();
 
-        public override string ToString()
+        public override string ToString() => ToString(false);
+
+        public string ToString(bool useUnicodeCharacters)
         {
             StringBuilder sb = new StringBuilder();
             foreach (VariableIdentifier identifier in identifiers)
             {
-                sb.Append(identifier);
+                sb.Append(identifier.ToString(useUnicodeCharacters));
             }
             return sb.ToString();
         }

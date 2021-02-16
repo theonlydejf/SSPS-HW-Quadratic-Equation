@@ -17,13 +17,13 @@ namespace Equations
             this.RightSide = rightSide;
         }
 
-        public void SimplifyEachSide()
+        public void SimplifyBothSides()
         {
             LeftSide.Simplify();
             RightSide.Simplify();
         }
 
-        public void SolveForZero()
+        public void SimpleSolveForZero()
         {
             LeftSide -= RightSide;
             RightSide = 0;
@@ -41,9 +41,11 @@ namespace Equations
                 VariableCollection.Parse(equationSidesStr[1]));
         }
 
-        public override string ToString()
+        public override string ToString() => ToString(false);
+
+        public string ToString(bool useUnicodeCharacters)
         {
-            return $"{ LeftSide } = { RightSide }";
+            return $"{ LeftSide.ToString(useUnicodeCharacters) } = { RightSide.ToString(useUnicodeCharacters) }";
         }
     }
 }

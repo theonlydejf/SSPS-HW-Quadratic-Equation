@@ -35,10 +35,22 @@ namespace Equations
             return hashCode;
         }
 
-        public override string ToString()
+        public override string ToString() => ToString(false);
+
+        public string ToString(bool useUnicodeCharacters)
         {
             if (Exponent != 1)
-                return Marker + "^" + Exponent.ToString().Replace(',', '.');
+            {
+                if (!useUnicodeCharacters)
+                    return Marker + "^" + Exponent.ToString().Replace(',', '.');
+                else
+                {
+                    if ((Exponent % 1) == 0)
+                        return Marker + ToStringHelper.IntToSuperscript((int)Exponent);
+                    else
+                        return "(" + Marker + "^" + Exponent.ToString().Replace(',', '.') + ")";
+                }
+            }
             return Marker.ToString();
         }
     }

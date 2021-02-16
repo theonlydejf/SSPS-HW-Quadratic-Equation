@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,22 +13,28 @@ namespace SSPS_HW_Quadratic_Equation
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.Unicode;
+
+            Console.WriteLine('ᐧ');
 
             while (true)
             {
                 try
                 {
+                    //TODO opravit parsovani zapornych exponentu
 
-                    //VariableCollection equation = VariableCollection.Parse(Console.ReadLine());
-                    //equation.Simplify();
-
+                    Console.Write("Enter equation: ");
                     Equation equation = Equation.Parse(Console.ReadLine());
-                    QuadraticEquation quadraticEquation = new QuadraticEquation(equation);
+                    Console.Write("Enter variable to solve for: ");
+                    Variable variable = Variable.Parse(Console.ReadLine());
+                    Console.WriteLine(variable);
+
+                    LinearEquation quadraticEquation = new LinearEquation(equation, variable.Identifiers);
                     VariableCollection[] result = quadraticEquation.Solve();
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     for (int i = 0; i < result.Length; i++)
                     {
-                        Console.WriteLine($"x{ i } = { result[i] }");
+                        Console.WriteLine($"{ quadraticEquation.ResultingVariable }{ ToStringHelper.IntToSubscript(i + 1) } = { result[i].ToString(true) }");
                     }
                     Console.ResetColor();
                 }

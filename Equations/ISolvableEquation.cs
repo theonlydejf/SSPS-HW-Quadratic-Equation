@@ -6,6 +6,7 @@ namespace Equations
 {
     interface ISolvableEquation
     {
+        VariableIdentifierCollection ResultingVariable { get; }
         VariableCollection[] Solve();
     }
 }

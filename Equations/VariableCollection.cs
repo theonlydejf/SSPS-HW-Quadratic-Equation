@@ -15,10 +15,11 @@ namespace Equations
         private static string DivideNumberByNumberPattern { get => $@"{ NUMBER_PATTERN }\/{ NUMBER_PATTERN }"; }
         private static string DivideVariableByNumberPattern { get => $@"(?<=.)(?<!\d)\/{ NUMBER_PATTERN }(?=[+\-\)\/]|$)"; }
 
+        public int Root { get; set; }
 
         public VariableCollection(params Variable[] variables) : base(variables)
         {
-            
+            Root = 1;
         }
 
         public void Simplify()
@@ -373,22 +374,40 @@ namespace Equations
             return result;
         }
 
-        public override string ToString()
+        public override string ToString() => ToString(false);
+
+        public string ToString(bool useUnicodeCharacteres)
         {
-            if (Count == 1)
-                return this[0].ToString();
+            if (Count == 0)
+                return "";
 
-            StringBuilder sb = new StringBuilder();
-            foreach (Variable variable in this)
+            if (Count == 1 && this[0].Multiplier == 0)
+                return "0";
+
+            string _out = this[0].ToString(false, useUnicodeCharacteres);
+            if (Count > 1)
             {
-                if (sb.Length > 0 && variable.Multiplier >= 0)
-                    sb.Append(" + ");
-                else if (sb.Length > 0 && variable.Multiplier < 0)
-                    sb.Append(" - ");
+                StringBuilder sb = new StringBuilder();
+                foreach (Variable variable in this)
+                {
+                    if (sb.Length > 0 && variable.Multiplier >= 0)
+                        sb.Append(" + ");
+                    else if (sb.Length > 0 && variable.Multiplier < 0)
+                        sb.Append(" - ");
 
-                sb.Append(variable.ToString(sb.Length > 0));
+                    sb.Append(variable.ToString(sb.Length > 0, useUnicodeCharacteres));
+                }
+                _out = sb.ToString();
             }
-            return sb.ToString();
+
+            if (Root == 1)
+                return _out;
+            else if (Root == 2)
+                return ToStringHelper.RadicalSymbol + $"({ _out })";
+            else if (Root > 2)
+                return ToStringHelper.IntToSuperscript(Root) + ToStringHelper.RadicalSymbol + $"({Root})";
+
+            throw new InvalidOperationException("Root with value " + Root + " doesn't make sense!");
         }
     }
 }

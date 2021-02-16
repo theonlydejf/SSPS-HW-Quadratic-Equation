@@ -53,6 +53,7 @@ namespace Equations
             {
                 if (exponents[i] == 0)
                     continue;
+
                 _identifiers.Add(new VariableIdentifier(markers[i], exponents[i]));
             }
 
@@ -129,6 +130,9 @@ namespace Equations
 
             foreach (KeyValuePair<char, double> variableData in variableDataFinal)
             {
+                if (variableData.Value == 0)
+                    continue;
+
                 finalIdentifiers.Add(new VariableIdentifier(variableData.Key, variableData.Value));
             }
 
@@ -248,7 +252,7 @@ namespace Equations
 
         public override string ToString() => ToString(false);
 
-        internal string ToString(bool withoutSigns)
+        internal string ToString(bool withoutSigns, bool useUnicodeCharacters = false)
         {
             double val = Multiplier;
             if (withoutSigns)
@@ -257,13 +261,13 @@ namespace Equations
             if (Identifiers.Count <= 0)
                 return val.ToString();
             if (val == 1 && Identifiers.Count > 0)
-                return Identifiers.ToString();
+                return Identifiers.ToString(useUnicodeCharacters);
             else if (val == 1)
                 return "1";
             if (val == -1)
-                return "-" + Identifiers;
+                return "-" + Identifiers.ToString(useUnicodeCharacters);
 
-            return (val + Identifiers.ToString()).Replace(',', '.');
+            return (val + Identifiers.ToString(useUnicodeCharacters)).Replace(',', '.');
         }
     }
 }
