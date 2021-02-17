@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Equations
 {
-    public struct VariableIdentifier
+    public struct VariableIdentifier : IEquatable<VariableIdentifier>
     {
         public char Marker { get; }
         public double Exponent { get; }
@@ -23,8 +24,7 @@ namespace Equations
             }
 
             var identifier = (VariableIdentifier)obj;
-            return EqualityComparer<char?>.Default.Equals(Marker, identifier.Marker) &&
-                   Exponent == identifier.Exponent;
+            return Marker == identifier.Marker && Exponent == identifier.Exponent;
         }
 
         public override int GetHashCode()
@@ -52,6 +52,11 @@ namespace Equations
                 }
             }
             return Marker.ToString();
+        }
+
+        public bool Equals(VariableIdentifier other)
+        {
+            return Marker == other.Marker && Exponent == other.Exponent;
         }
     }
 }

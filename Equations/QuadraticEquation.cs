@@ -10,65 +10,11 @@ namespace Equations
 
         public QuadraticEquation(Equation equation) : base(equation.LeftSide, equation.RightSide)
         {
-            SimpleSolveForZero();
-
             VariableIdentifierCollection resultingVariable;
 
-            CheckIfValid(out resultingVariable);
+            SolvableEquationFunctions.CheckIfValid(this, 1, 2, new[] { 2d }, out resultingVariable);
+
             ResultingVariable = resultingVariable;
-        }
-
-        private void CheckIfValid(out VariableIdentifierCollection resultingVariable)
-        {
-            VariableIdentifierCollection? defaultIdentifiers = null;
-            foreach (var ii in LeftSide)
-            {
-                if (ii.Identifiers.Count > 0)
-                {
-                    defaultIdentifiers = ii.Identifiers;
-                    break;
-                }
-            }
-
-            if (!defaultIdentifiers.HasValue)
-                throw new ArgumentException("Inputted equation doesn't have any variables!");
-
-            bool foundSecondPower = false;
-            foreach (Variable variable in LeftSide)
-            {
-                VariableIdentifierCollection identifiers = variable.Identifiers;
-                if (identifiers.ContainsMarker('i'))
-                    throw new NotImplementedException("Cannot solve quadratic equations with imaginary numbers in them!");
-
-                for (int i = 0; i < identifiers.Count; i++)
-                {
-                    if (!(identifiers.HasSameMarkersAs(defaultIdentifiers.Value) || identifiers.Count == 0))
-                        throw new ArgumentException("Inputted equation isn't a solvable quadratic equation (there are two or more different variables)!");
-
-                    double[] exponents = identifiers.GetExponents();
-                    for (int j = 1; j < exponents.Length; j++)
-                    {
-                        if (exponents[j] != exponents[j - 1])
-                            throw new ArgumentException($"Inputted equation isn't a quadratic equation (one or more terms have different exponents)!");
-                    }
-
-                    if (exponents[0] > 2 || exponents[0] < 1)
-                        throw new ArgumentException($"Inputted equation isn't a quadratic equation (one or more terms have wrong exponent)!");
-                    if (exponents[0] == 2)
-                        foundSecondPower = true;
-                }
-
-            }
-            if (!foundSecondPower)
-                throw new ArgumentException("Inputted equation is linear and not quadratic!");
-
-            VariableIdentifier[] solvableIdentifiers = new VariableIdentifier[defaultIdentifiers.Value.Count];
-            for (int i = 0; i < solvableIdentifiers.Length; i++)
-            {
-                solvableIdentifiers[i] = new VariableIdentifier(defaultIdentifiers.Value[i].Marker, 1);
-            }
-
-            resultingVariable = new VariableIdentifierCollection(solvableIdentifiers);
         }
 
         public VariableCollection[] Solve()

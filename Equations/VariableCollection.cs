@@ -59,6 +59,13 @@ namespace Equations
             Sort();
         }
 
+        public VariableCollection Clone()
+        {
+            Variable[] arr = new Variable[Count];
+            CopyTo(arr);
+            return new VariableCollection(arr);
+        }
+
         private static bool replaced = false;
         public static VariableCollection Parse(string s)
         {

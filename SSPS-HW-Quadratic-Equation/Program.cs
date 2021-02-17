@@ -25,11 +25,12 @@ namespace SSPS_HW_Quadratic_Equation
 
                     Console.Write("Enter equation: ");
                     Equation equation = Equation.Parse(Console.ReadLine());
-                    Console.Write("Enter variable to solve for: ");
-                    Variable variable = Variable.Parse(Console.ReadLine());
-                    Console.WriteLine(variable);
+                    //Console.Write("Enter variable to solve for: ");
+                    //Variable variable = Variable.Parse(Console.ReadLine());
+                    //equation.SolveFor(variable.Identifiers);
+                    //Console.WriteLine(equation.ToString(true));
 
-                    LinearEquation quadraticEquation = new LinearEquation(equation, variable.Identifiers);
+                    QuadraticEquation quadraticEquation = new QuadraticEquation(equation);
                     VariableCollection[] result = quadraticEquation.Solve();
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     for (int i = 0; i < result.Length; i++)
