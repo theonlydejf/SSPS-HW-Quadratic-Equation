@@ -49,8 +49,11 @@ namespace Equations
                 throw new InvalidOperationException("Cannot solve this equation, beacuse ResultingVariable isn't a single variable in this context!");
             }
 
+            if (LeftSide.Count == 0 || (LeftSide.Count == 1 && LeftSide[0].Multiplier == 0))
+                throw new InfinitlyManySolutionsException();
+
             if(!foundResultingVariable)
-                throw new InvalidOperationException("Cannot solve this equation for this variable: " + ResultingVariable);
+                throw new NoSolutionException("The equation has no solution for the following variable: " + ResultingVariable);
 
             LeftSide -= _rightSide;
             RightSide = -_rightSide;

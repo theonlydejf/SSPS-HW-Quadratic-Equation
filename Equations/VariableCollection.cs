@@ -27,6 +27,7 @@ namespace Equations
         {
             Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
             int simplifyCount = 0;
+            
             foreach (Variable variable in this)
             {
                 if (variable.Multiplier == 0)
@@ -54,6 +55,8 @@ namespace Equations
 
             if (simplifyCount > 0)
                 Simplify();
+
+            Sort();
         }
 
         private static bool replaced = false;

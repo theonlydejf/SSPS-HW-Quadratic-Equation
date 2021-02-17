@@ -19,11 +19,11 @@ namespace SSPS_HW_Quadratic_Equation
             {
                 try
                 {
-                    VariableCollection variables = VariableCollection.Parse(Console.ReadLine());
+                    /*VariableCollection variables = VariableCollection.Parse(Console.ReadLine());
                     variables.Simplify();
-                    Console.WriteLine(variables.ToString(true));
+                    Console.WriteLine(variables.ToString(true));*/
 
-                    /*Console.Write("Enter equation: ");
+                    Console.Write("Enter equation: ");
                     Equation equation = Equation.Parse(Console.ReadLine());
                     Console.Write("Enter variable to solve for: ");
                     Variable variable = Variable.Parse(Console.ReadLine());
@@ -36,7 +36,7 @@ namespace SSPS_HW_Quadratic_Equation
                     {
                         Console.WriteLine($"{ quadraticEquation.ResultingVariable }{ ToStringHelper.IntToSubscript(i + 1) } = { result[i].ToString(true) }");
                     }
-                    Console.ResetColor();*/
+                    Console.ResetColor();
                 }
                 catch (Exception ex)
                 {

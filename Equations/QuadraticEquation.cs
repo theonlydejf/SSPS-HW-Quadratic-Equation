@@ -43,17 +43,17 @@ namespace Equations
                 for (int i = 0; i < identifiers.Count; i++)
                 {
                     if (!(identifiers.HasSameMarkersAs(defaultIdentifiers.Value) || identifiers.Count == 0))
-                        throw new ArgumentException("Inputted equation isn't a quadratic equation (There are two or more different variables)!");
+                        throw new ArgumentException("Inputted equation isn't a solvable quadratic equation (there are two or more different variables)!");
 
                     double[] exponents = identifiers.GetExponents();
                     for (int j = 1; j < exponents.Length; j++)
                     {
                         if (exponents[j] != exponents[j - 1])
-                            throw new ArgumentException($"Inputted equation isn't a quadratic equation (term \"{ variable }\" has two or more different exponents)!");
+                            throw new ArgumentException($"Inputted equation isn't a quadratic equation (one or more terms have different exponents)!");
                     }
 
                     if (exponents[0] > 2 || exponents[0] < 1)
-                        throw new ArgumentException($"Inputted equation isn't a quadratic equation (term \"{ variable }\" has wrong exponent)!");
+                        throw new ArgumentException($"Inputted equation isn't a quadratic equation (one or more terms have wrong exponent)!");
                     if (exponents[0] == 2)
                         foundSecondPower = true;
                 }

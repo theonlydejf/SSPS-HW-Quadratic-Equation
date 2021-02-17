@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Equations
 {
-    public struct Variable
+    public struct Variable : IComparable<Variable>
     {
         private const string PARSE_NUMBER_PATTERN = @"[+-]?\d*([.,]\d+)?";
         private static string ParseIdentifierPattern = $@"[a-zA-Z](?!\^(\-?([a-zA-Z])|$))(\^+?\d*([.,]\d+)?)?";
@@ -275,6 +275,49 @@ namespace Equations
                 return "-" + Identifiers.ToString(useUnicodeCharacters);
 
             return (val + Identifiers.ToString(useUnicodeCharacters)).Replace(',', '.');
+        }
+
+        public int CompareTo(Variable other)
+        {
+            int aExponentCount = 0;
+            double aHighestExponent = 0;
+            foreach (var ii in Identifiers.GetExponents())
+            {
+                if(ii > aHighestExponent)
+                {
+                    aHighestExponent = ii;
+                    aExponentCount = 1;
+                    continue;
+                }
+                if (ii == aHighestExponent)
+                    aExponentCount++;
+            }
+
+            int bExponentCount = 0;
+            double bHighestExponent = 0;
+            foreach (var ii in other.Identifiers.GetExponents())
+            {
+                if (ii > bHighestExponent)
+                {
+                    bHighestExponent = ii;
+                    bExponentCount = 1;
+                    continue;
+                }
+                if (ii == bHighestExponent)
+                    bExponentCount++;
+            }
+
+            if (aHighestExponent != bHighestExponent)
+                return bHighestExponent.CompareTo(aHighestExponent);
+            if (aExponentCount != bExponentCount)
+                return bExponentCount.CompareTo(aExponentCount);
+            if (Identifiers.Count != other.Identifiers.Count)
+                return other.Identifiers.Count.CompareTo(Identifiers.Count);
+
+            string aString = new string(Identifiers.GetMarkers());
+            string bString = new string(other.Identifiers.GetMarkers());
+
+            return aString.CompareTo(bString);
         }
     }
 }
