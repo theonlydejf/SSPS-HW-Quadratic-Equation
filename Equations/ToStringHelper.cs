@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Equations
 {
-    public static class ToStringHelper
+    internal static class ToStringHelper
     {
         public const char SubscriptAsciiStart = '₀';
         public const char SubscriptNegativeSign = '₋';

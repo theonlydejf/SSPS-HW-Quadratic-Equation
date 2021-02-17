@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Equations
 {
-    interface ISolvableEquation
+    public interface ISolvableEquation
     {
+        string Name { get; }
         VariableIdentifierCollection ResultingVariable { get; }
         VariableCollection[] Solve();
     }

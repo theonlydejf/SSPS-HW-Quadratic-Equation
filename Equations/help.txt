@@ -1,0 +1,65 @@
+﻿
+
+               .NET Equation solver HELP
+                  Mady by David Krcmar
+
+Syntax
+You can use following operations:
+	- Adding (+)
+	- Subtracting (-)
+	- Multiplying (*)
+	- Dividing (/)
+	- Power (^)
+	- Brackets
+
+Some of these operators are limited:
+ Dividing:
+	- You cannot divide by polynoms
+	  eg. "1 / (x + 2)" will throw an exception
+ Power:
+	- You cannot raise something to a variable
+	  eg "2^x" will throw an exception
+	- You cannot raise something to any bracket
+	  eg "x^(1 + 1)" will throw an exception
+
+How to write equatins:
+ Example equation:
+	2xy + x^2 - (y + 2)^2 = -x^2y^-1 + 2x*x(x + 3)
+	=> Will be interpreted as:
+		2xy + x² - (y + 2)² = -x²*x⁻¹ + 2x² * (x + 3)
+
+ Powers:
+	To use powers in your equation, use the '^' symbol.
+	It is not posibble to write them down using exponent
+	characters lik '²' or '⁻¹'!
+	x^2 => x²
+	x^-1 => x⁻¹
+	!!! x^+2 -> Exception
+	(a + b)^2 = (a + b)(a + b) => (a + b)²
+	!!! (a + b)^-1 -> Exception
+	2 * x^0 = 2x^0 = 2
+	2^2 = 4
+	2^-1 = 0.5
+
+ Multiplying:
+	x * x = xx => x²
+	2 * x = x * 2 = 2x
+	x * y = xy
+	2 * x + 2 * y = 2x2y = 4xy
+	2 * (x + y) = 2(x + y) = 2x + 2y
+
+ Dividing:
+	x / 2 = 0.5x
+	1 / x = /x => x⁻¹
+	a / 2 * c * d / 3 * e * f * (2 + 2) =
+	 = a / 2cd / 3ef(2 + 2) =
+	 = a / 2cd / 12ef
+	a / (2b + b) = a / 3b => 0.33ab⁻¹
+	1 / 3 = 0.33
+
+ Brackets:
+	(x + y) * (z + w) = (x + y)(z + w)
+
+
+© 2021 David Kdrčmář
+

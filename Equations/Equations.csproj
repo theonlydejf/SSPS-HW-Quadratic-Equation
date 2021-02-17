@@ -4,4 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="help.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="help.txt" />
+  </ItemGroup>
+
 </Project>

@@ -23,7 +23,11 @@ namespace Equations
             }
 
             if (!defaultIdentifiers.HasValue)
-                throw new ArgumentException("Inputted equation doesn't have any variables!");
+            {
+                if (LeftSide[0].Multiplier != 0)
+                    throw new NoSolutionException();
+                throw new InfinitlyManySolutionsException();
+            }
 
             bool[] foundExponents = new bool[neededExponents.Length];
             foreach (Variable variable in LeftSide)

@@ -6,6 +6,8 @@ namespace Equations
 {
     public class LinearEquation : Equation, ISolvableEquation
     {
+        public string Name { get => "Linear Equation"; }
+
         public LinearEquation(Equation equation) : base(equation.LeftSide, equation.RightSide)
         {
             VariableIdentifierCollection resultingVariable;

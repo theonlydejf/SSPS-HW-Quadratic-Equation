@@ -6,6 +6,8 @@ namespace Equations
 {
     public class QuadraticEquation : Equation, ISolvableEquation
     {
+        public string Name { get => "Quadratic Equation"; }
+
         public VariableIdentifierCollection ResultingVariable { get; private set; }
 
         public QuadraticEquation(Equation equation) : base(equation.LeftSide, equation.RightSide)
