@@ -14,7 +14,7 @@ namespace SSPS_HW_Quadratic_Equation
     class Program
     {
         // TODO:
-        // - Formatted help
+        // - Graphs
         // - Documentation
 
         internal delegate VariableCollection[] PerformAction(Equation equation);

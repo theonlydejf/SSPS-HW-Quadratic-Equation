@@ -20,23 +20,38 @@ namespace Equations
 
         public static void PrintHelp()
         {
+            Console.BackgroundColor = ConsoleColor.Black;
             Console.Clear();
             Console.ResetColor();
             var assembly = Assembly.GetExecutingAssembly();
             Stream stream = assembly.GetManifestResourceStream("Equations.help.txt");
-
+            Console.Write(" ");
             using(StreamReader sr = new StreamReader(stream))
             {
                 int minMove = 1;
                 while(true)
                 {
                     int i = 0;
+                    int lastY = Console.CursorTop;
                     do
                     {
                         if (sr.EndOfStream)
                             break;
-                        Console.WriteLine(sr.ReadLine());
-                        i++;
+                        char c = (char)sr.Read();
+                        if(c == '$')
+                        {
+                            char[] num = new char[2];
+                            sr.ReadBlock(num, 0, 2);
+                            Console.ForegroundColor = (ConsoleColor)int.Parse(new string(num));
+                            continue;
+                        }
+                        Console.Write(c);
+                        if(Console.CursorTop != lastY)
+                        {
+                            i++;
+                            Console.Write(" ");
+                        }
+                        lastY = Console.CursorTop;
                     } while (i < minMove || Console.CursorTop < Console.WindowHeight - 1);
                     minMove = 1;
                     ConsoleColor bgColor = ConsoleColor.White;
@@ -65,6 +80,7 @@ namespace Equations
                     Console.SetCursorPosition(x, y);
                 }
             }
+            Console.ResetColor();
             Console.Clear();
         }
     }
